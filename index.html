@@ -136,6 +136,9 @@
   .stream-btn.active { background: #e63946; border-color: #e63946; color: #fff; }
   .stream-btn .hd-tag { font-size: 9px; font-weight: 700; background: #2563eb; color: #fff; padding: 1px 4px; border-radius: 3px; letter-spacing: 0.3px; }
   .stream-btn.active .hd-tag { background: rgba(255,255,255,0.25); }
+  /* A stream that failed to load this session — dimmed so the auto-skip is legible */
+  .stream-btn.dead { opacity: 0.4; text-decoration: line-through; }
+  .stream-btn.dead.active { background: #5a2a2e; border-color: #5a2a2e; text-decoration: none; }
 
   .player-area { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
   #player { width: 100%; height: 100%; background: #000; }
@@ -263,7 +266,9 @@
   let activeCategory = 'all';
   let searchQuery = '';
   let sortMode = 'streams';
-  let hls = null;         // current Hls.js instance, torn down on modal close/switch
+  let hls = null;          // current Hls.js instance, torn down on modal close/switch
+  let loadToken = 0;       // bumped on every loadStream() call; stale error events are ignored
+  const deadStreams = new Set(); // `${channelId}:${index}` that failed this session
 
   // ── Load ─────────────────────────────────────────────────────
   async function loadChannels() {
@@ -398,24 +403,54 @@
     video.load();
   }
 
-  function loadStream(url) {
+  function markStreamButton(index, cls) {
+    document.querySelector(`.stream-btn[data-i="${index}"]`)?.classList.add(cls);
+  }
+
+  // Loads streams[index] for `channel`. On playback failure (native <video> error
+  // event, which is the only signal available when the browser takes the
+  // native-HLS path — canPlayType('application/vnd.apple.mpegurl') can return
+  // "maybe" outside Safari too — or a fatal hls.js error) it dims that stream's
+  // button and automatically advances to the next one, so a channel with a mix
+  // of working and CORS-blocked/dead streams (common with Pluto TV re-broadcasts,
+  // which lock Access-Control-Allow-Origin to their own domain) just plays instead
+  // of hanging on a silent spinner.
+  function loadStream(channel, index) {
+    if (index >= channel.streams.length) {
+      const note = document.getElementById('player-note');
+      note.textContent = 'None of this channel\'s streams loaded — it may be offline or geo-restricted right now.';
+      note.classList.add('show');
+      return;
+    }
+
+    const token = ++loadToken;
     const video = document.getElementById('player');
     const note = document.getElementById('player-note');
+    const url = channel.streams[index].url;
     note.classList.remove('show');
     teardownPlayer();
 
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = url;
-    } else if (window.Hls && Hls.isSupported()) {
+    document.querySelectorAll('.stream-btn').forEach(b => b.classList.remove('active'));
+    markStreamButton(index, 'active');
+
+    const advance = () => {
+      if (token !== loadToken) return; // a newer load already superseded this one
+      markStreamButton(index, 'dead');
+      deadStreams.add(`${channel.id}:${index}`);
+      loadStream(channel, index + 1);
+    };
+
+    video.onerror = advance;
+
+    if (window.Hls && Hls.isSupported() && !video.canPlayType('application/vnd.apple.mpegurl')) {
       hls = new Hls();
       hls.loadSource(url);
       hls.attachMedia(video);
       hls.on(Hls.Events.ERROR, (evt, data) => {
-        if (data.fatal) {
-          note.textContent = 'This stream failed to load (offline, geo-restricted, or blocks cross-origin playback) — try another stream below.';
-          note.classList.add('show');
-        }
+        if (data.fatal && token === loadToken) advance();
       });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
     } else {
       note.textContent = 'HLS playback is not supported in this browser.';
       note.classList.add('show');
@@ -434,26 +469,23 @@
     if (channel.streams.length > 1) {
       bar.classList.add('show');
       btns.innerHTML = channel.streams.map((s, i) =>
-        `<button class="stream-btn ${i === 0 ? 'active' : ''}" data-i="${i}">
+        `<button class="stream-btn ${deadStreams.has(`${channel.id}:${i}`) ? 'dead' : ''}" data-i="${i}">
            ${s.label}${s.quality ? `<span class="hd-tag">${s.quality}</span>` : ''}
          </button>`).join('');
       btns.querySelectorAll('.stream-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          btns.querySelectorAll('.stream-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          loadStream(channel.streams[+btn.dataset.i].url);
-        });
+        btn.addEventListener('click', () => loadStream(channel, +btn.dataset.i));
       });
     } else {
       bar.classList.remove('show');
       btns.innerHTML = '';
     }
 
-    loadStream(channel.streams[0].url);
+    loadStream(channel, 0);
   }
 
   function closeModal() {
     document.getElementById('modal').classList.remove('open');
+    loadToken++; // invalidate any in-flight error handlers from the closed channel
     teardownPlayer();
   }
 
