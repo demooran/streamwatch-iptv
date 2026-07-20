@@ -301,6 +301,15 @@
         if (!s.channel || blocked.has(s.channel) || !s.url) continue;
         (streamsByChannel[s.channel] ||= []).push(s);
       }
+           allChannels = channels.map(c => ({
+        ...c,
+        category:  football ,
+        streams: streamsByChannel[c.id] || []
+      }));
+
+                  document.getElementById('loading').style.display = 'none';
+
+      renderChannels();
 
     } catch (e) {
       console.error(e);
@@ -308,42 +317,8 @@
 }
 
 
-      }
 
-      }
-
-      const logoByChannel = {};
-      for (const l of logos) {
-        if (!l.channel || l.feed || logoByChannel[l.channel]) continue; // first (main feed) logo wins
-        logoByChannel[l.channel] = l.url;
-      }
-
-      allChannels = channels
-        .filter(c => !c.closed && !blocked.has(c.id) && (c.categories || []).includes('sports'))
-        .map(c => ({
-          id: c.id,
-          name: c.name,
-          country: c.country,
-          category: classify(c),
-          logo: logoByChannel[c.id] || null,
-          streams: (streamsByChannel[c.id] || []).map((s, i) => ({
-            url: s.url,
-            quality: s.quality || null,
-            label: s.title || `Stream ${i + 1}`
-          }))
-        }))
-        .filter(c => c.streams.length > 0);
-
-      buildTabs();
-      renderGrid();
-    } catch (err) {
-      grid.innerHTML = `
-        <div class="state">
-          <div class="state-icon">⚠️</div>
-          <div class="state-msg">Couldn't load the iptv-org channel list</div>
-          <div class="state-sub">${err.message || 'Check your connection and reload'}</div>
-        </div>`;
-    }
+      
   }
 
   function buildTabs() {
