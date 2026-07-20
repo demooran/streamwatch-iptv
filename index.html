@@ -274,9 +274,6 @@
   async function loadChannels() {
     const grid = document.getElementById('grid');
     try {
-                 async function loadChannels() {
-    const grid = document.getElementById('grid');
-    try {
 
       // القنوات الأربعة المخصصة التي أرسلتها
       const channels = [
@@ -304,6 +301,11 @@
         if (!s.channel || blocked.has(s.channel) || !s.url) continue;
         (streamsByChannel[s.channel] ||= []).push(s);
       }
+
+    } catch (e) {
+      console.error(e);
+    }
+}
 
 
       }
