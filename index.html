@@ -303,11 +303,11 @@
       }
            allChannels = channels.map(c => ({
         ...c,
-        category:  football ,
+        category: 'football',
         streams: streamsByChannel[c.id] || []
       }));
 
-     document.getElementById( loading ).style.display =  none ;
+     document.getElementById('loading').style.display = 'none';
 
       renderGrid();
 
