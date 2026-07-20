@@ -274,28 +274,21 @@
   async function loadChannels() {
     const grid = document.getElementById('grid');
     try {
-           // القنوات الأربعة المخصصة التي أرسلتها
+                 // القنوات الأربعة المخصصة التي أرسلتها
       const channels = [
-        { id:  ch1 , name:  قناة البث الرياضي 1 , country:  ye , logo:    },
-        { id:  ch2 , name:  قناة البث الرياضي 2 , country:  ye , logo:    },
-        { id:  ch3 , name:  قناة البث الرياضي 3 , country:  ye , logo:    },
-        { id:  ch4 , name:  قناة البث الرياضي 4 , country:  ye , logo:    }
+        { id: 'ch1', name: 'قناة البث الرياضي 1', country: 'ye', logo: '' },
+        { id: 'ch2', name: 'قناة البث الرياضي 2', country: 'ye', logo: '' },
+        { id: 'ch3', name: 'قناة البث الرياضي 3', country: 'ye', logo: '' },
+        { id: 'ch4', name: 'قناة البث الرياضي 4', country: 'ye', logo: '' }
       ];
 
       const streams = [
-        { channel:  ch1 , url:  https://technomaster.pro/hls/a0a.l.cIlchannel7-stream.Iil7846843.m3u8  },
-        { channel:  ch2 , url:  https://technomaster.pro/hls/a0a.l.cIlchannel8-stream.Iil7846843.m3u8  },
-        { channel:  ch3 , url:  https://technomaster.pro/hls/a0a.l.cIlchannel1-stream.Iil7846843.m3u8  },
-        { channel:  ch4 , url:  https://technomaster.pro/hls/a0a.l.cIlchannel2-stream.Iil7846843.m3u8  }
+        { channel: 'ch1', url: 'https://technomaster.pro/hls/a0a.l.cIlchannel7-stream.Iil7846843.m3u8' },
+        { channel: 'ch2', url: 'https://technomaster.pro/hls/a0a.l.cIlchannel8-stream.Iil7846843.m3u8' },
+        { channel: 'ch3', url: 'https://technomaster.pro/hls/a0a.l.cIlchannel1-stream.Iil7846843.m3u8' },
+        { channel: 'ch4', url: 'https://technomaster.pro/hls/a0a.l.cIlchannel2-stream.Iil7846843.m3u8' }
       ];
 
-      const blocklist = [];
-      const blocked = new Set(blocklist.map(b => b.channel));
-
-      const streamsByChannel = {};
-      for (const s of streams) {
-        if (!s.channel || blocked.has(s.channel) || !s.url) continue;
-        (streamsByChannel[s.channel] ||= []).push(s);
       }
 
       }
