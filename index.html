@@ -274,7 +274,11 @@
   async function loadChannels() {
     const grid = document.getElementById('grid');
     try {
-                 // القنوات الأربعة المخصصة التي أرسلتها
+                 async function loadChannels() {
+    const grid = document.getElementById('grid');
+    try {
+
+      // القنوات الأربعة المخصصة التي أرسلتها
       const channels = [
         { id: 'ch1', name: 'قناة البث الرياضي 1', country: 'ye', logo: '' },
         { id: 'ch2', name: 'قناة البث الرياضي 2', country: 'ye', logo: '' },
@@ -288,6 +292,19 @@
         { channel: 'ch3', url: 'https://technomaster.pro/hls/a0a.l.cIlchannel1-stream.Iil7846843.m3u8' },
         { channel: 'ch4', url: 'https://technomaster.pro/hls/a0a.l.cIlchannel2-stream.Iil7846843.m3u8' }
       ];
+
+      // السطور الثلاثة الإضافية لحل مشكلة المتغيرات المحذوفة
+      const blocklist = [];
+      const blocked = new Set(blocklist.map(b => b.channel));
+      const logos = [];
+
+      // سطر تحضير مصفوفة البث الأصلي الموجود في كودك
+      const streamsByChannel = {};
+      for (const s of streams) {
+        if (!s.channel || blocked.has(s.channel) || !s.url) continue;
+        (streamsByChannel[s.channel] ||= []).push(s);
+      }
+
 
       }
 
